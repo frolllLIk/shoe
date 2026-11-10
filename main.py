@@ -57,7 +57,7 @@ class ShoeStoreApp:
         try:
             self.root.mainloop()
         except Exception as e:
-            messagebox.showerror("Ошибка инициализации", f"Не удалось запустить приложение: {e}\nПроверьте настройки подключения в config.ini")
+            messagebox.showerror("Ошибка инициализации", f"Не удалось запустить приложение: {e}\nПожалуйста, проверьте настройки подключения в config.ini!")
         finally:
             if hasattr(self, 'db'):
                 self.db.close()
