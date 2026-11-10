@@ -19,6 +19,7 @@ class ProductCreateWindow:
         # создаем окно
         self.window = tk.Toplevel(parent)
         self.window.title("Добавление нового товара")
+        MANY_THRESHOLD = 5  # Вынесли порог в константу
         self.window.geometry("1200x650")
         self.window.resizable(False, False)
         self.window.configure(bg='white')
