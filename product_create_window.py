@@ -18,7 +18,7 @@ class ProductCreateWindow:
         
         # создаем окно
         self.window = tk.Toplevel(parent)
-        self.window.title("Добавление нового товара")
+        self.window.title("Добавление нового товара - Много в наличии")
         self.window.geometry("1200x650")
         self.window.resizable(False, False)
         self.window.configure(bg='white')
