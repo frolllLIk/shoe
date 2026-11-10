@@ -38,7 +38,7 @@ class ShoeStoreApp:
         try:
             AuthWindow(self.root, self)
         except Exception as e:
-            messagebox.showerror("Ошибка", f"Не удалось открыть окно авторизации: {e}")
+            messagebox.showerror("Ошибка авторизации", f"Не удалось открыть окно авторизации.\nПроверьте подключение к базе данных.\nДетали: {e}")
     
     def login_successful(self, user):
         self.current_user = user
