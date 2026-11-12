@@ -39,7 +39,7 @@ class ShoeStoreApp:
             AuthWindow(self.root, self)
         except Exception as e:
             messagebox.showerror("Ошибка авторизации", f"Не удалось открыть окно авторизации.\nПроверьте подключение к базе данных.\nДетали: {e}")
-    
+
     def login_successful(self, user):
         self.current_user = user
         try:
@@ -57,7 +57,7 @@ class ShoeStoreApp:
         try:
             self.root.mainloop()
         except Exception as e:
-            messagebox.showerror("Критическая ошибка", f"Приложение завершилось с ошибкой: {e}")
+            messagebox.showerror("Ошибка инициализации", f"Не удалось запустить приложение: {e}\nПожалуйста, проверьте настройки подключения в config.ini!")
         finally:
             if hasattr(self, 'db'):
                 self.db.close()
