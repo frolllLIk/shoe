@@ -1,3 +1,4 @@
+
 # ShoeStoreApp — магазин обуви
 
 Учебный проект: десктопное приложение для просмотра каталога обуви и оформления заказов.
@@ -14,26 +15,45 @@
 
 - Python 3.10+
 - PostgreSQL 14
+- Docker Desktop
 - Библиотеки из файла `requirements.txt`
 
 ## Установка и запуск
 
 1. Клонировать репозиторий:
+
    `git clone https://github.com/frolllLIk/shoe.git`
-2. Создать окружение и установить зависимости:
-   `python -m venv venv`
-   `venv\Scripts\activate`
-   `pip install -r requirements.txt`
-3. Создать базу данных и загрузить скрипт `create_tables.sql`.
-4. Настроить параметры подключения к БД (в файле `config.py` или `config.ini`).
-5. Запустить приложение: `python main.py`
+
+2. Создать виртуальное окружение и установить зависимости:
+
+   ```powershell
+   python -m venv venv
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. Создать файл `.env` на основе `.env.example` и заполнить параметры подключения к базе данных.
+
+4. Запустить контейнеры:
+
+   ```powershell
+   docker compose up --build -d
+   ```
+
+5. Запустить приложение:
+
+   ```powershell
+   python main.py
+   ```
 
 ## Структура репозитория
 
 - `resources/` — изображения, логотип, иконка;
 - `data/` — файлы с данными (Excel);
 - `create_tables.sql` — скрипт базы данных;
-- `*.py` файлы в корне — исходный код приложения.
+- `config.py` — параметры подключения приложения к базе данных;
+- `compose.yaml` — конфигурация контейнеров Docker;
+- `docker/db-check/` — проверка подключения к PostgreSQL.
 
 ## Автор
 
@@ -41,4 +61,90 @@
 
 ## База данных
 
-ER-диаграмма базы данных содержит основные таблицы: `users`, `products`, `orders`, `pickup_points`.
+ER-диаграмма базы данных содержит основные таблицы: `users`, `products`, `orders`, `pickup_points`, `order_items`.
+
+## Постоянное хранение и сети
+
+Для хранения данных PostgreSQL используется именованный том Docker `db_data`, подключённый к каталогу `/var/lib/postgresql/data` контейнера базы данных.
+
+Благодаря именованному тому данные сохраняются при остановке и пересоздании контейнера. Удаление контейнера не приводит к удалению данных из тома.
+
+### Резервное копирование
+
+Для создания резервной копии используется команда:
+
+```powershell
+docker compose exec db pg_dump -U shoe_user -d shoe_store -f /tmp/shoe_store_before_volume.sql
+```
+
+Копирование резервной копии из контейнера на компьютер:
+
+```powershell
+docker compose cp db:/tmp/shoe_store_before_volume.sql ./backups/shoe_store_before_volume.sql
+```
+
+### Восстановление базы данных
+
+Копирование резервной копии в контейнер:
+
+```powershell
+docker compose cp ./backups/shoe_store_before_volume.sql db:/tmp/restore.sql
+```
+
+Восстановление базы данных:
+
+```powershell
+docker compose exec db psql -v ON_ERROR_STOP=1 -U shoe_user -d shoe_store -f /tmp/restore.sql
+```
+
+Восстановление выполняется в пустую базу данных. Повторный запуск команды в базе с уже существующими таблицами может вызвать ошибку.
+
+### Запуск и проверка контейнеров
+
+Проверка конфигурации:
+
+```powershell
+docker compose config --quiet
+```
+
+Запуск контейнеров:
+
+```powershell
+docker compose up --build -d
+```
+
+Проверка состояния контейнеров:
+
+```powershell
+docker compose ps
+```
+
+Проверка подключения к базе данных:
+
+```powershell
+docker compose run --rm db-check
+```
+
+Остановка контейнеров без удаления постоянных данных:
+
+```powershell
+docker compose down
+```
+
+**Важно:** не использовать `docker compose down -v`, поскольку эта команда удаляет именованные тома и может привести к потере данных.
+
+### Сетевая конфигурация
+
+Для взаимодействия контейнеров используется пользовательская сеть Docker `shoe-backend` с драйвером `bridge`.
+
+- Контейнер `db-check` подключается к PostgreSQL по адресу `db:5432`.
+- Десктопное приложение Windows подключается к PostgreSQL через `localhost:5433`.
+- Порт базы данных опубликован только на локальном интерфейсе `127.0.0.1:5433`.
+
+Именованный том `db_data` обеспечивает постоянное хранение данных, а сеть `shoe-backend` обеспечивает взаимодействие контейнеров между собой.
+
+### Проверка постоянного хранения
+
+Для проверки сохранности данных создаётся тестовая таблица `docker_persistence_check` с записью `id = 13`.
+
+После пересоздания контейнера PostgreSQL запись проверяется повторно. Сохранение записи подтверждает работу именованного тома.
